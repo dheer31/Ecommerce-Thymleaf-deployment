@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" th:lang="${#locale}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ClickNBuy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --primary-hover: #4338CA;
+            --secondary-color: #10B981;
+            --accent-color: #F59E0B;
+            --danger-color: #EF4444;
+            --dark-color: #111827;
+            --gray-color: #6B7280;
+            --light-gray: #F3F4F6;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--light-gray);
+            color: var(--dark-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkout-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            color: var(--white);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(-4px);
+            color: var(--white);
+        }
+
+        .checkout-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .order-summary-card {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .product-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .product-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+        }
+
+        .payment-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            width: 100%;
+            transition: transform 0.2s ease;
+            font-size: 1rem;
+        }
+
+        .payment-btn:hover {
+            transform: translateY(-2px);
+            opacity: 0.95;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.25);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        /* Dummy Card UI */
+        .card-preview {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .card-preview::before {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            top: -60px;
+            right: -60px;
+        }
+
+        .card-preview::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            bottom: -40px;
+            left: -40px;
+        }
+
+        .card-chip {
+            width: 40px;
+            height: 30px;
+            background: linear-gradient(135deg, #d4a847, #f0c040);
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+
+        .card-number-display {
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            margin-bottom: 1rem;
+            font-family: monospace;
+        }
+
+        .dummy-badge {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.35rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-card-group {
+            position: relative;
+        }
+
+        .input-card-group .card-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+            font-size: 1.3rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Checkout Header -->
+    <div class="checkout-header">
+        <div class="container">
+            <div class="d-flex flex-column">
+                <a href="/user/cart" class="back-btn">
+                    <i class="bi bi-arrow-left-short fs-4"></i>
+                    <span>Back to Cart</span>
+                </a>
+                <h1 class="display-6 fw-bold mb-0">Checkout</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Content -->
+    <div class="container mb-5">
+        <form method="post" action="/user/payment/dummy" id="checkoutForm">
+            <div class="row g-4">
+                <!-- Left Column: Delivery + Payment -->
+                <div class="col-lg-8">
+                    <!-- Delivery Info -->
+                    <div class="checkout-card mb-4">
+                        <h4 class="mb-4"><i class="bi bi-truck me-2"></i>Delivery Information</h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" th:value="${user.name}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" th:value="${user.email}" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" th:value="${user.mobile}" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Delivery Address <span class="text-danger">*</span></label>
+                                <textarea class="form-control" name="address" rows="3"
+                                    placeholder="Enter your full delivery address" required id="addressField"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dummy Payment Form -->
+                    <div class="checkout-card">
+                        <div class="d-flex align-items-center gap-2 mb-4">
+                            <h4 class="mb-0"><i class="bi bi-credit-card me-2"></i>Payment Details</h4>
+                            <span class="dummy-badge"><i class="bi bi-info-circle"></i> Demo Mode</span>
+                        </div>
+
+                        <!-- Fake Card Preview -->
+                        <div class="card-preview">
+                            <div class="card-chip"></div>
+                            <div class="card-number-display" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div style="font-size:0.7rem; opacity:0.7;">CARD HOLDER</div>
+                                    <div id="cardHolderDisplay" th:text="${user.name}"></div>
+                                </div>
+                                <div class="text-end">
+                                    <div style="font-size:0.7rem; opacity:0.7;">EXPIRES</div>
+                                    <div id="expiryDisplay">MM/YY</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Card Number</label>
+                                <div class="input-card-group">
+                                    <input type="text" class="form-control" id="cardNumber"
+                                        placeholder="1234 5678 9012 3456" maxlength="19"
+                                        oninput="formatCardNumber(this)" required>
+                                    <i class="bi bi-credit-card-2-front card-icon"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Expiry Date</label>
+                                <input type="text" class="form-control" id="expiry"
+                                    placeholder="MM/YY" maxlength="5"
+                                    oninput="formatExpiry(this)" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">CVV</label>
+                                <input type="password" class="form-control" id="cvv"
+                                    placeholder="•••" maxlength="3" required>
+                            </div>
+                            <div class="col-12">
+                                <div class="alert alert-info d-flex align-items-center gap-2 py-2">
+                                    <i class="bi bi-shield-check"></i>
+                                    <small>This is a <strong>demo checkout</strong>. No real payment is processed. Enter any card details.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Order Summary -->
+                <div class="col-lg-4">
+                    <div class="checkout-card order-summary-card">
+                        <h4 class="mb-4">Order Summary</h4>
+
+                        <!-- Product List -->
+                        <div class="product-list mb-4">
+                            <div class="product-item" th:each="item : ${items}">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img th:src="${item.product.imageLink}" th:alt="${item.product.name}"
+                                        class="product-image"
+                                        onerror="this.src='https://placehold.co/60x60?text=?'">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1" th:text="${item.product.name}"></h6>
+                                        <p class="mb-0 text-muted">
+                                            <small>Qty: <span th:text="${item.quantity}"></span>
+                                                × ₹<span th:text="${#numbers.formatDecimal(item.product.price, 0, 2)}"></span>
+                                            </small>
+                                        </p>
+                                    </div>
+                                    <div class="text-end">
+                                        <p class="mb-0 fw-semibold">₹<span th:text="${#numbers.formatDecimal(item.quantity * item.product.price, 0, 2)}"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Details -->
+                        <div class="border-top pt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span class="fw-semibold">₹<span th:text="${#numbers.formatDecimal(total, 0, 2)}"></span></span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping</span>
+                                <span class="text-success fw-semibold">Free</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-4 border-top pt-2">
+                                <span class="fw-bold">Total Amount</span>
+                                <span class="fw-bold fs-5 text-primary">₹<span th:text="${#numbers.formatDecimal(total, 0, 2)}"></span></span>
+                            </div>
+
+                            <button type="submit" class="payment-btn" id="payBtn">
+                                <i class="bi bi-lock-fill me-2"></i>Place Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Format card number with spaces
+        function formatCardNumber(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 16);
+            let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+            input.value = formatted;
+            document.getElementById('cardNumberDisplay').textContent =
+                (value + '################').substring(0, 16).replace(/(.{4})/g, '$1 ').trim()
+                .replace(/\d/g, (_, i) => i < 12 ? '•' : value[i] || '•');
+            // Show last 4
+            let display = '•••• •••• •••• ' + (value.substring(12) || '••••').padEnd(4, '•');
+            document.getElementById('cardNumberDisplay').textContent = display;
+        }
+
+        // Format expiry
+        function formatExpiry(input) {
+            let value = input.value.replace(/\D/g, '').substring(0, 4);
+            if (value.length >= 2) value = value.substring(0, 2) + '/' + value.substring(2);
+            input.value = value;
+            document.getElementById('expiryDisplay').textContent = value || 'MM/YY';
+        }
+
+        // Form submit validation
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            const address = document.getElementById('addressField').value.trim();
+            const card = document.getElementById('cardNumber').value.trim();
+            const expiry = document.getElementById('expiry').value.trim();
+            const cvv = document.getElementById('cvv').value.trim();
+
+            if (!address) {
+                e.preventDefault();
+                alert('Please enter a delivery address.');
+                return;
+            }
+            if (card.replace(/\s/g, '').length < 16) {
+                e.preventDefault();
+                alert('Please enter a valid 16-digit card number.');
+                return;
+            }
+            if (expiry.length < 5) {
+                e.preventDefault();
+                alert('Please enter a valid expiry date (MM/YY).');
+                return;
+            }
+            if (cvv.length < 3) {
+                e.preventDefault();
+                alert('Please enter a valid CVV.');
+                return;
+            }
+
+            const btn = document.getElementById('payBtn');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+            btn.disabled = true;
+        });
+    </script>
+</body>
+</html>
