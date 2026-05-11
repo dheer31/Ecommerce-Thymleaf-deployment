@@ -18,7 +18,7 @@ pipeline {
             steps {
                 echo "🚀 Building and starting Spring Boot & MySQL containers..."
                 sh '''
-                   docker-compose up -d --build
+                    docker compose up -d --build
                 '''
             }
         }
@@ -30,8 +30,8 @@ pipeline {
             steps {
                 echo "🧹 Cleaning Docker resources..."
                 sh '''
-                docker compose down --rmi all --volumes --remove-orphans
-                docker system prune -af
+                    docker compose down --rmi all --volumes --remove-orphans
+                    docker system prune -af
                 '''
             }
         }
