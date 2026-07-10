@@ -1,60 +1,48 @@
 pipeline {
-
     agent any
 
-    environment {
-        IMAGE_NAME = "springboot-app"
-        IMAGE_TAG  = "latest"
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['Deploy', 'Remove'],
+            description: 'Deploy or Remove application'
+        )
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Docker Compose Deploy') {
+            when {
+                expression { params.ACTION == 'Deploy' }
+            }
             steps {
-                checkout scm
+                echo "🚀 Building and starting Spring Boot & MySQL containers..."
+                sh '''
+                    docker compose up -d --build
+                '''
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                """
+        stage('Docker Compose Remove & Cleanup') {
+            when {
+                expression { params.ACTION == 'Remove' }
             }
-        }
-
-        stage('Verify Image') {
             steps {
-                sh "docker images | grep ${IMAGE_NAME}"
-            }
-        }
-
-        stage('Run Container') {
-            steps {
-                sh """
-                    docker stop springboot-container || true
-                    docker rm springboot-container || true
-
-                    docker run -d \
-                    --name springboot-container \
-                    -p 8081:8081 \
-                    ${IMAGE_NAME}:${IMAGE_TAG}
-                """
+                echo "🧹 Cleaning Docker resources..."
+                sh '''
+                    docker compose down --rmi all --volumes --remove-orphans
+                    docker system prune -af
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "Docker Image Built Successfully!"
+            echo "✅ Pipeline executed successfully! - Designed and Developed by dhee31"
         }
-
         failure {
-            echo "Build Failed!"
-        }
-
-        always {
-            sh "docker ps -a"
+            echo "❌ Pipeline failed. Check Jenkins logs! - Designed and Developed by dhee31"
         }
     }
 }
